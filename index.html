@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rooted — Start your subscription</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16201B;
+    --moss:#2F4A38;
+    --moss-light:#3D5F49;
+    --sage:#A9C0AC;
+    --sage-dim:#7E9482;
+    --linen:#F1ECDD;
+    --linen-dim:#E7E0CC;
+    --gold:#E3A857;
+    --bark:#6B5643;
+    --err:#B3542E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--linen);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .stage{
+    display:grid;
+    grid-template-columns:38% 62%;
+    min-height:100vh;
+  }
+  /* ---------- Left illustration panel ---------- */
+  .grove{
+    background:var(--ink);
+    color:var(--linen);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:48px 44px;
+    position:relative;
+    overflow:hidden;
+  }
+  .grove-top .wordmark{
+    font-family:'Fraunces',serif;
+    font-size:1.4rem;
+    font-weight:500;
+    letter-spacing:0.01em;
+    margin:0;
+  }
+  .plant-wrap{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px 0;
+  }
+  .plant-wrap svg{ width:78%; max-width:280px; height:auto; }
+  .leaf{
+    transform-origin:bottom center;
+    transform:scale(0.15);
+    opacity:0;
+    transition:transform 0.7s cubic-bezier(.34,1.56,.64,1), opacity 0.5s ease;
+  }
+  .leaf.show{ transform:scale(1); opacity:1; }
+  .pot{ transition:transform 0.4s ease; }
+  .soil{ transition:transform 0.4s ease; }
+
+  .grove-caption{
+    font-family:'Fraunces',serif;
+    font-size:1.25rem;
+    font-style:italic;
+    line-height:1.5;
+    max-width:26ch;
+    color:var(--sage);
+    min-height:4.5em;
+  }
+
+  /* ---------- Right form panel ---------- */
+  .plot{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:56px 40px;
+  }
+  .plot-inner{ width:100%; max-width:460px; }
+
+  .step-track{
+    display:flex;
+    gap:6px;
+    margin-bottom:34px;
+  }
+  .step-track span{
+    height:3px;
+    flex:1;
+    background:var(--linen-dim);
+    border-radius:2px;
+    overflow:hidden;
+    position:relative;
+  }
+  .step-track span::after{
+    content:"";
+    position:absolute; inset:0;
+    background:var(--moss);
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform 0.5s ease;
+  }
+  .step-track span.done::after{ transform:scaleX(1); }
+
+  h1.step-title{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:2rem;
+    line-height:1.15;
+    margin:0 0 8px;
+  }
+  p.step-sub{
+    margin:0 0 32px;
+    color:var(--bark);
+    font-size:0.98rem;
+    line-height:1.5;
+    max-width:42ch;
+  }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; animation:rise 0.45s ease; }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* Plan cards */
+  .plans{ display:flex; flex-direction:column; gap:12px; margin-bottom:8px; }
+  .plan{
+    border:1.5px solid var(--linen-dim);
+    background:#fff;
+    border-radius:14px;
+    padding:18px 18px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    cursor:pointer;
+    transition:border-color 0.2s ease, background 0.2s ease;
+  }
+  .plan:hover{ border-color:var(--sage-dim); }
+  .plan.selected{
+    border-color:var(--moss);
+    background:#FBFAF3;
+  }
+  .plan-icon{
+    width:44px; height:44px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .plan-body{ flex:1; }
+  .plan-name{ font-weight:600; font-size:1.02rem; }
+  .plan-desc{ font-size:0.88rem; color:var(--bark); margin-top:2px; line-height:1.4;}
+  .plan-price{ font-family:'Fraunces',serif; font-size:1.15rem; white-space:nowrap; }
+  .plan-price small{ font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--bark); }
+
+  /* Light + toggle */
+  .field{ margin-bottom:22px; }
+  .field label.field-label{
+    display:block;
+    font-size:0.85rem;
+    font-weight:600;
+    margin-bottom:10px;
+    color:var(--ink);
+  }
+  .light-options{ display:flex; gap:10px; }
+  .light-opt{
+    flex:1;
+    border:1.5px solid var(--linen-dim);
+    background:#fff;
+    border-radius:12px;
+    padding:14px 8px;
+    text-align:center;
+    cursor:pointer;
+    font-size:0.85rem;
+    transition:border-color 0.2s ease, background 0.2s ease;
+  }
+  .light-opt.selected{ border-color:var(--moss); background:#FBFAF3; }
+  .light-opt svg{ display:block; margin:0 auto 8px; }
+
+  .toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    border:1.5px solid var(--linen-dim);
+    border-radius:12px;
+    padding:14px 16px;
+    background:#fff;
+  }
+  .toggle-row .txt{ font-size:0.92rem; }
+  .toggle-row .txt small{ display:block; color:var(--bark); font-size:0.8rem; margin-top:2px;}
+  .switch{
+    width:44px; height:26px;
+    background:var(--linen-dim);
+    border-radius:20px;
+    position:relative;
+    cursor:pointer;
+    transition:background 0.25s ease;
+    flex:none;
+  }
+  .switch::after{
+    content:"";
+    position:absolute; top:3px; left:3px;
+    width:20px; height:20px;
+    background:#fff;
+    border-radius:50%;
+    transition:transform 0.25s ease;
+    box-shadow:0 1px 2px rgba(0,0,0,0.2);
+  }
+  .switch.on{ background:var(--moss); }
+  .switch.on::after{ transform:translateX(18px); }
+
+  /* Inputs */
+  .input-group{ position:relative; margin-bottom:18px; }
+  .input-group input{
+    width:100%;
+    padding:16px 14px 8px;
+    font-size:0.98rem;
+    font-family:'Inter',sans-serif;
+    border:1.5px solid var(--linen-dim);
+    border-radius:10px;
+    background:#fff;
+    color:var(--ink);
+    outline:none;
+    transition:border-color 0.2s ease;
+  }
+  .input-group input:focus{ border-color:var(--moss); }
+  .input-group label{
+    position:absolute;
+    left:15px; top:16px;
+    font-size:0.98rem;
+    color:var(--bark);
+    pointer-events:none;
+    transition:all 0.15s ease;
+  }
+  .input-group input:focus + label,
+  .input-group input:not(:placeholder-shown) + label{
+    top:6px; font-size:0.72rem; color:var(--moss-light);
+  }
+  .input-row{ display:flex; gap:12px; }
+  .input-row .input-group{ flex:1; }
+  .error-msg{
+    font-size:0.8rem; color:var(--err); margin-top:-12px; margin-bottom:16px; display:none;
+  }
+  .error-msg.show{ display:block; }
+  .input-group.invalid input{ border-color:var(--err); }
+
+  /* Review */
+  .review-card{
+    border:1.5px solid var(--linen-dim);
+    border-radius:14px;
+    padding:20px;
+    background:#fff;
+    margin-bottom:22px;
+  }
+  .review-row{
+    display:flex; justify-content:space-between; align-items:baseline;
+    padding:10px 0;
+    border-bottom:1px solid var(--linen-dim);
+    font-size:0.92rem;
+  }
+  .review-row:last-child{ border-bottom:none; }
+  .review-row .k{ color:var(--bark); }
+  .review-row .v{ font-weight:600; text-align:right; }
+  .edit-link{
+    background:none; border:none; font-family:'Inter',sans-serif;
+    color:var(--moss-light); font-size:0.8rem; cursor:pointer; padding:0;
+    text-decoration:underline; text-underline-offset:2px;
+  }
+
+  /* Buttons */
+  .btn-row{ display:flex; gap:12px; margin-top:8px; }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-size:0.95rem;
+    font-weight:600;
+    padding:15px 22px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    transition:background 0.2s ease, transform 0.15s ease;
+  }
+  .btn-primary{
+    flex:1;
+    background:var(--moss);
+    color:var(--linen);
+  }
+  .btn-primary:hover{ background:var(--moss-light); }
+  .btn-primary:active{ transform:scale(0.98); }
+  .btn-ghost{
+    background:transparent;
+    color:var(--bark);
+    border:1.5px solid var(--linen-dim);
+  }
+  .btn-ghost:hover{ border-color:var(--sage-dim); }
+
+  /* Success */
+  .success-wrap{ text-align:left; }
+  .success-wrap h1{ margin-bottom:12px; }
+  .ship-date{
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    color:var(--moss-light);
+  }
+
+  @media (max-width: 860px){
+    .stage{ grid-template-columns:1fr; }
+    .grove{ padding:32px 28px 20px; }
+    .plant-wrap{ padding:8px 0; }
+    .plant-wrap svg{ max-width:150px; }
+    .grove-caption{ display:none; }
+    .plot{ padding:32px 24px 60px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .leaf, .panel.active, .switch, .switch::after, .btn-primary{ transition:none !important; animation:none !important; }
+  }
+
+  input:focus-visible, .plan:focus-visible, .light-opt:focus-visible, .switch:focus-visible, .btn:focus-visible, .edit-link:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <!-- LEFT: illustration -->
+  <div class="grove">
+    <div class="grove-top">
+      <p class="wordmark">Rooted</p>
+    </div>
+
+    <div class="plant-wrap">
+      <svg viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <ellipse class="soil" cx="100" cy="182" rx="34" ry="7" fill="#3A2E22"/>
+        <path class="pot" d="M62 150 L138 150 L128 195 Q100 202 72 195 Z" fill="#5B4632"/>
+        <path class="pot" d="M58 150 L142 150 L138 160 L62 160 Z" fill="#6B5643"/>
+        <line x1="100" y1="150" x2="100" y2="90" stroke="#7E9482" stroke-width="4" stroke-linecap="round"/>
+        <path class="leaf leaf1" d="M100 130 C 70 122, 55 95, 68 68 C 92 82, 102 108, 100 130 Z" fill="#A9C0AC"/>
+        <path class="leaf leaf2" d="M100 115 C 130 108, 148 82, 136 55 C 110 68, 98 94, 100 115 Z" fill="#8FA893"/>
+        <path class="leaf leaf3" d="M100 96 C 78 82, 72 52, 92 30 C 112 48, 116 76, 100 96 Z" fill="#B8CCB9"/>
+        <path class="leaf leaf4" d="M100 80 C 118 62, 148 58, 164 78 C 144 92, 116 92, 100 80 Z" fill="#7E9482"/>
+      </svg>
+    </div>
+
+    <p class="grove-caption" id="caption">Choosing a plan is the only hard part — after that, we do the growing.</p>
+  </div>
+
+  <!-- RIGHT: form -->
+  <div class="plot">
+    <div class="plot-inner">
+
+      <div class="step-track" id="stepTrack" aria-hidden="true">
+        <span class="done"></span><span></span><span></span><span></span>
+      </div>
+
+      <form id="orderForm" novalidate>
+
+        <!-- STEP 1: plan -->
+        <div class="panel active" data-step="1">
+          <h1 class="step-title">Pick a plan</h1>
+          <p class="step-sub">Every box ships potted, labeled, and ready to sit in a window. Swap or pause anytime.</p>
+
+          <div class="plans" role="radiogroup" aria-label="Subscription plan">
+            <div class="plan" tabindex="0" role="radio" aria-checked="false" data-plan="sprout" data-price="18">
+              <div class="plan-icon">
+                <svg width="30" height="30" viewBox="0 0 30 30"><path d="M15 26V16" stroke="#3D5F49" stroke-width="2.5" stroke-linecap="round"/><path d="M15 16C15 10 10 8 6 8C6 14 9 17 15 16Z" fill="#A9C0AC"/></svg>
+              </div>
+              <div class="plan-body">
+                <div class="plan-name">Sprout</div>
+                <div class="plan-desc">One easy plant a month — good for first-timers or small desks.</div>
+              </div>
+              <div class="plan-price">$18<small>/mo</small></div>
+            </div>
+
+            <div class="plan" tabindex="0" role="radio" aria-checked="false" data-plan="bloom" data-price="32">
+              <div class="plan-icon">
+                <svg width="34" height="30" viewBox="0 0 34 30"><path d="M12 26V16M22 26V18" stroke="#3D5F49" stroke-width="2.5" stroke-linecap="round"/><path d="M12 16C12 10 7 8 3 8C3 14 6 17 12 16Z" fill="#A9C0AC"/><path d="M22 18C22 13 26 11 29 11C29 16 27 18.5 22 18Z" fill="#8FA893"/></svg>
+              </div>
+              <div class="plan-body">
+                <div class="plan-name">Bloom</div>
+                <div class="plan-desc">Two plants plus a ceramic pot every other shipment.</div>
+              </div>
+              <div class="plan-price">$32<small>/mo</small></div>
+            </div>
+
+            <div class="plan" tabindex="0" role="radio" aria-checked="false" data-plan="grove" data-price="54">
+              <div class="plan-icon">
+                <svg width="36" height="30" viewBox="0 0 36 30"><path d="M8 26V17M18 26V15M28 26V18" stroke="#3D5F49" stroke-width="2.5" stroke-linecap="round"/><path d="M8 17C8 11 4 9 1 9C1 15 4 18 8 17Z" fill="#A9C0AC"/><path d="M18 15C18 8 22 6 26 6C26 12 23 16 18 15Z" fill="#8FA893"/><path d="M28 18C28 13 32 11 35 11C35 16 33 18.5 28 18Z" fill="#B8CCB9"/></svg>
+              </div>
+              <div class="plan-body">
+                <div class="plan-name">Grove</div>
+                <div class="plan-desc">Three plants and a care kit — for the person building a real collection.</div>
+              </div>
+              <div class="plan-price">$54<small>/mo</small></div>
+            </div>
+          </div>
+          <div class="error-msg" id="err-plan">Pick a plan to continue.</div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary" onclick="goNext(1)">Continue</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: space -->
+        <div class="panel" data-step="2">
+          <h1 class="step-title">Tell us about your space</h1>
+          <p class="step-sub">This decides which plants we send — nobody wants a fern in a dark hallway.</p>
+
+          <div class="field">
+            <label class="field-label">How much natural light do you get?</label>
+            <div class="light-options" role="radiogroup" aria-label="Light level">
+              <div class="light-opt" tabindex="0" role="radio" aria-checked="false" data-light="bright">
+                <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="5" fill="#E3A857"/><g stroke="#E3A857" stroke-width="1.6"><line x1="11" y1="1" x2="11" y2="4"/><line x1="11" y1="18" x2="11" y2="21"/><line x1="1" y1="11" x2="4" y2="11"/><line x1="18" y1="11" x2="21" y2="11"/></g></svg>
+                Bright
+              </div>
+              <div class="light-opt" tabindex="0" role="radio" aria-checked="false" data-light="medium">
+                <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="5" fill="#B8CCB9"/></svg>
+                Medium
+              </div>
+              <div class="light-opt" tabindex="0" role="radio" aria-checked="false" data-light="low">
+                <svg width="22" height="22" viewBox="0 0 22 22"><path d="M11 4a7 7 0 000 14 7 7 0 010-14Z" fill="#6B5643"/></svg>
+                Low
+              </div>
+            </div>
+          </div>
+          <div class="error-msg" id="err-light">Choose the closest match — you can adjust later.</div>
+
+          <div class="field">
+            <div class="toggle-row">
+              <div class="txt">Pet-safe only<small>We'll skip anything toxic to cats or dogs.</small></div>
+              <div class="switch" id="petSwitch" tabindex="0" role="switch" aria-checked="false" onclick="toggleSwitch()"></div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-ghost" onclick="goPrev(2)">Back</button>
+            <button type="button" class="btn btn-primary" onclick="goNext(2)">Continue</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: delivery -->
+        <div class="panel" data-step="3">
+          <h1 class="step-title">Where should it grow?</h1>
+          <p class="step-sub">We ship every Tuesday, so plants spend as little time as possible in a box.</p>
+
+          <div class="input-group">
+            <input type="text" id="name" placeholder=" " autocomplete="name">
+            <label for="name">Full name</label>
+          </div>
+          <div class="error-msg" id="err-name">Enter the name for delivery.</div>
+
+          <div class="input-group">
+            <input type="email" id="email" placeholder=" " autocomplete="email">
+            <label for="email">Email</label>
+          </div>
+          <div class="error-msg" id="err-email">Enter a valid email address.</div>
+
+          <div class="input-group">
+            <input type="text" id="address" placeholder=" " autocomplete="street-address">
+            <label for="address">Delivery address</label>
+          </div>
+          <div class="error-msg" id="err-address">Enter your delivery address.</div>
+
+          <div class="input-row">
+            <div class="input-group">
+              <input type="text" id="city" placeholder=" " autocomplete="address-level2">
+              <label for="city">City</label>
+            </div>
+            <div class="input-group" style="max-width:120px;">
+              <input type="text" id="zip" placeholder=" " autocomplete="postal-code">
+              <label for="zip">ZIP</label>
+            </div>
+          </div>
+          <div class="error-msg" id="err-city">City and ZIP are both needed.</div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-ghost" onclick="goPrev(3)">Back</button>
+            <button type="button" class="btn btn-primary" onclick="goNext(3)">Continue</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: review -->
+        <div class="panel" data-step="4">
+          <h1 class="step-title">Review your order</h1>
+          <p class="step-sub">Nothing ships until you confirm, and you can pause or cancel anytime after that.</p>
+
+          <div class="review-card">
+            <div class="review-row">
+              <span class="k">Plan</span>
+              <span class="v" id="rv-plan">—</span>
+            </div>
+            <div class="review-row">
+              <span class="k">Light in your space</span>
+              <span class="v" id="rv-light">—</span>
+            </div>
+            <div class="review-row">
+              <span class="k">Pet-safe only</span>
+              <span class="v" id="rv-pet">—</span>
+            </div>
+            <div class="review-row">
+              <span class="k">Ships to</span>
+              <span class="v" id="rv-address">—</span>
+            </div>
+            <div class="review-row">
+              <span class="k">Monthly total</span>
+              <span class="v" id="rv-price">—</span>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-ghost" onclick="goPrev(4)">Back</button>
+            <button type="button" class="btn btn-primary" onclick="submitOrder()">Confirm subscription</button>
+          </div>
+        </div>
+
+        <!-- STEP 5: success -->
+        <div class="panel success-wrap" data-step="5">
+          <h1 class="step-title">You're planted.</h1>
+          <p class="step-sub">Order confirmed — a welcome email is on its way to you now.</p>
+          <p class="ship-date" id="shipDate"></p>
+          <div class="btn-row" style="margin-top:24px;">
+            <button type="button" class="btn btn-primary" onclick="window.location.reload()">Start another order</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const state = { plan:null, price:0, light:null, pet:false };
+  const captions = {
+    1: "Choosing a plan is the only hard part — after that, we do the growing.",
+    2: "Every plant we send is matched to the light you actually have, not the light you wish you had.",
+    3: "We pack roots in damp moss, not styrofoam — better for the plant, better for the planet.",
+    4: "Last look before it ships. Nothing leaves the greenhouse until you say go.",
+    5: "Welcome to the grove. We'll see you next month."
+  };
+
+  function updateCaption(step){
+    document.getElementById('caption').textContent = captions[step];
+  }
+
+  function updateTrack(step){
+    const spans = document.querySelectorAll('#stepTrack span');
+    spans.forEach((s,i)=> s.classList.toggle('done', i < step));
+  }
+
+  function updateLeaves(step){
+    // step 1 -> no extra leaves, step 2 -> leaf1, step3 -> leaf1+2, step4+ -> all
+    const leafMap = { 1:[], 2:['leaf1'], 3:['leaf1','leaf2'], 4:['leaf1','leaf2','leaf3'], 5:['leaf1','leaf2','leaf3','leaf4'] };
+    const toShow = leafMap[step] || [];
+    document.querySelectorAll('.leaf').forEach(l=>{
+      const match = [...l.classList].some(c => toShow.includes(c));
+      l.classList.toggle('show', match);
+    });
+  }
+
+  function showStep(step){
+    document.querySelectorAll('.panel').forEach(p=>{
+      p.classList.toggle('active', p.dataset.step == step);
+    });
+    updateTrack(Math.min(step,4));
+    updateCaption(step);
+    updateLeaves(step);
+  }
+
+  function setError(id, show){
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('show', show);
+  }
+
+  // --- Step 1: plan selection ---
+  document.querySelectorAll('.plan').forEach(el=>{
+    const select = ()=>{
+      document.querySelectorAll('.plan').forEach(p=>{ p.classList.remove('selected'); p.setAttribute('aria-checked','false'); });
+      el.classList.add('selected');
+      el.setAttribute('aria-checked','true');
+      state.plan = el.dataset.plan;
+      state.price = Number(el.dataset.price);
+      setError('err-plan', false);
+    };
+    el.addEventListener('click', select);
+    el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); select(); } });
+  });
+
+  // --- Step 2: light + pet toggle ---
+  document.querySelectorAll('.light-opt').forEach(el=>{
+    const select = ()=>{
+      document.querySelectorAll('.light-opt').forEach(p=>{ p.classList.remove('selected'); p.setAttribute('aria-checked','false'); });
+      el.classList.add('selected');
+      el.setAttribute('aria-checked','true');
+      state.light = el.dataset.light;
+      setError('err-light', false);
+    };
+    el.addEventListener('click', select);
+    el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); select(); } });
+  });
+
+  function toggleSwitch(){
+    const sw = document.getElementById('petSwitch');
+    state.pet = !state.pet;
+    sw.classList.toggle('on', state.pet);
+    sw.setAttribute('aria-checked', String(state.pet));
+  }
+  document.getElementById('petSwitch').addEventListener('keydown', e=>{
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleSwitch(); }
+  });
+
+  // --- Navigation + validation ---
+  function goNext(step){
+    if(step === 1){
+      if(!state.plan){ setError('err-plan', true); return; }
+    }
+    if(step === 2){
+      if(!state.light){ setError('err-light', true); return; }
+    }
+    if(step === 3){
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const zip = document.getElementById('zip').value.trim();
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      let ok = true;
+      toggleInvalid('name', !name); if(!name) ok=false;
+      setError('err-email', !emailOk); toggleInvalid('email', !emailOk); if(!emailOk) ok=false;
+      toggleInvalid('address', !address); if(!address) ok=false;
+      const cityZipBad = !city || !zip;
+      setError('err-city', cityZipBad);
+      toggleInvalid('city', !city); toggleInvalid('zip', !zip);
+      if(cityZipBad) ok=false;
+      setError('err-name', !name);
+      setError('err-address', !address);
+
+      if(!ok) return;
+      populateReview();
+    }
+    showStep(step + 1);
+  }
+
+  function toggleInvalid(id, isInvalid){
+    document.getElementById(id).closest('.input-group').classList.toggle('invalid', isInvalid);
+  }
+
+  function goPrev(step){ showStep(step - 1); }
+
+  function populateReview(){
+    const planNames = { sprout:'Sprout', bloom:'Bloom', grove:'Grove' };
+    const lightNames = { bright:'Bright', medium:'Medium', low:'Low' };
+    document.getElementById('rv-plan').textContent = planNames[state.plan] || '—';
+    document.getElementById('rv-light').textContent = lightNames[state.light] || '—';
+    document.getElementById('rv-pet').textContent = state.pet ? 'Yes' : 'No';
+    const address = document.getElementById('address').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const zip = document.getElementById('zip').value.trim();
+    document.getElementById('rv-address').textContent = `${address}, ${city} ${zip}`;
+    document.getElementById('rv-price').textContent = `$${state.price}/mo`;
+  }
+
+  function submitOrder(){
+    const d = new Date();
+    d.setDate(d.getDate() + ((2 + 7 - d.getDay()) % 7 || 7)); // next Tuesday
+    const dateStr = d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    document.getElementById('shipDate').textContent = `Your first box ships ${dateStr}.`;
+    showStep(5);
+  }
+
+  showStep(1);
+</script>
+
+</body>
+</html>
